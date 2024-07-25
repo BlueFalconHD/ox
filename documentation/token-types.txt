@@ -1,0 +1,78 @@
+Certainly, here is the list of tokens for the Oxide language, organized by type and grouped by character length.
+
+### Reserved Words (Keywords):
+- `fn`
+- `let`
+- `where`
+- `switch`
+- `as`
+- `default`
+- `use`
+- `struct`
+- `true`
+- `false`
+- `mut`
+- `range`
+
+### Operators and Delimiters
+
+#### 1-Character:
+- `=`
+- `>`
+- `<`
+- `+`
+- `-`
+- `*`
+- `/`
+- `%`
+- `:`
+- `,`
+- `.`
+- `;`
+- `{`
+- `}`
+- `(`
+- `)`
+- `[`
+- `]`
+- `!`
+- `#`
+
+
+#### 2-Characters:
+- `->`
+- `==`
+- `!=`
+- `>=`
+- `<=`
+- `&&`
+- `||`
+- `+=`
+- `-=`
+- `*=`
+- `/=`
+- `%=`
+- `..`
+- `::`
+
+#### 3-Characters:
+- `###`
+
+### Literals:
+- String literals: `"Hello, world!"`
+- Number literals: `5`, `3.14`
+- Boolean literals: `true`, `false`
+
+### Identifiers:
+- Function names
+- Variable names
+- Struct names
+- Method names
+- Macro names
+
+### Comments:
+- Single line comments: `#`
+- Multi-line comments: `###...###`
+
+### Macros:
+- Identified by the `!` symbol following the name, e.g., `println!`

@@ -1,0 +1,273 @@
+
+enum TokenTypes {
+    // Keywords
+    FN,
+    LET,
+    WHERE,
+    SWITCH,
+    AS,
+    DEFAULT,
+    USE,
+    STRUCT,
+    TRUE,
+    FALSE,
+    MUT,
+    RANGE,
+
+    // Operators and Delimiters
+    ASSIGN,
+    GREATER,
+    LESS,
+    PLUS,
+    MINUS,
+    TIMES,
+    DIVIDE,
+    MOD,
+    COLON,
+    COMMA,
+    DOT,
+    SEMICOLON,
+    LBRACE,
+    RBRACE,
+    LPAREN,
+    RPAREN,
+    LBRACKET,
+    RBRACKET,
+    BANG,
+    HASH,
+
+    // 2-Character Operators and assosciated 1 character operators
+    ARROW, // -
+    EQ, // =
+    NEQ, // !
+    GEQ, // >
+    LEQ, // <
+    AND, // &
+    OR, // |
+    ADD_ASSIGN, // +
+    SUB_ASSIGN, // -
+    MUL_ASSIGN, // *
+    DIV_ASSIGN, // /
+    MOD_ASSIGN, // %
+    DOUBLE_COLON, // :
+    HASH_HASH, // #
+
+    // Literals
+    IDENTIFIER,
+    STRING,
+    NUMBER,
+    BOOLEAN,
+}
+
+keyword_map: HashMap<String, TokenTypes> = [
+    ("fn", TokenTypes::FN),
+    ("let", TokenTypes::LET),
+    ("where", TokenTypes::WHERE),
+    ("switch", TokenTypes::SWITCH),
+    ("as", TokenTypes::AS),
+    ("default", TokenTypes::DEFAULT),
+    ("use", TokenTypes::USE),
+    ("struct", TokenTypes::STRUCT),
+    ("true", TokenTypes::TRUE),
+    ("false", TokenTypes::FALSE),
+    ("mut", TokenTypes::MUT),
+    ("range", TokenTypes::RANGE),
+].iter().cloned().collect();
+
+struct Token {
+    token_type: TokenTypes,
+    lexeme: String,
+    literal: Option<String>,
+    line: u32,
+
+    init(token_type: TokenTypes, lexeme: String, literal: Option<String>, line: u32) {
+        Token {
+            token_type,
+            lexeme,
+            literal,
+            line,
+        }
+    }
+
+    to_string(&self) -> String {
+        format!("{} {} {}", self.token_type, self.lexeme, self.literal)
+    }
+}
+
+
+struct Scanner {
+    source: String,
+    tokens: Vec<Token>,
+    start: u32,
+    current: u32,
+    line: u32,
+
+
+    Vec<Token> scan_tokens(&self) {
+        while !is_at_end() {
+            start = current;
+            scan_token();
+        }
+
+        tokens.push(Token::init(TokenTypes::EOF, "", None, line));
+        tokens
+    }
+
+    is_at_end(&self) -> bool {
+        current >= source.len() as u32
+    }
+
+    scan_token(&self) {
+        let c = advance();
+        match c {
+            '(' => add_token(TokenTypes::LPAREN),
+            ')' => add_token(TokenTypes::RPAREN),
+            '{' => add_token(TokenTypes::LBRACE),
+            '}' => add_token(TokenTypes::RBRACE),
+            '[' => add_token(TokenTypes::LBRACKET),
+            ']' => add_token(TokenTypes::RBRACKET),
+            ',' => add_token(TokenTypes::COMMA),
+            '.' => add_token(TokenTypes::DOT),
+            '-' => add_token(TokenTypes::MINUS),
+            '+' => add_token(TokenTypes::PLUS),
+            ';' => add_token(TokenTypes::SEMICOLON),
+            '*' => add_token(TokenTypes::TIMES),
+            '!' => add_token(TokenTypes::BANG),
+            '=' => add_token(TokenTypes::ASSIGN),
+            '<' => add_token(TokenTypes::LESS),
+            '>' => add_token(TokenTypes::GREATER),
+            ':' => add_token(TokenTypes::COLON),
+            '/' => {
+                if match_next('/') {
+                    while peek() != '\n' && !is_at_end() {
+                        advance();
+                    }
+                } else {
+                    add_token(TokenTypes::DIVIDE);
+                }
+            },
+            ' ' => (),
+            '\r' => (),
+            '\t' => (),
+            '\n' => line += 1,
+            '"' => string(),
+            _ => {
+                if is_digit(c) {
+                    number();
+                } else if is_alpha(c) {
+                    identifier();
+                } else {
+                    error(line, "Unexpected character.");
+                }
+            }
+
+        }
+    }
+
+    advance(&self) -> char {
+        current += 1;
+        source.chars().nth(current as usize - 1).unwrap()
+    }
+
+    add_token(&self, token_type: TokenTypes) {
+        add_token_literal(token_type, None);
+    }
+
+    add_token_literal(&self, token_type: TokenTypes, literal: Option<String>) {
+        let text = source.chars().skip(start as usize).take(current as usize - start as usize).collect();
+        tokens.push(Token::init(token_type, text, literal, line));
+    }
+
+    match_next(&self, expected: char) -> bool {
+        if is_at_end() {
+            return false;
+        }
+        if source.chars().nth(current as usize) != expected {
+            return false;
+        }
+
+        current += 1;
+        true
+    }
+
+    peek(&self) -> char {
+        if is_at_end() {
+            return '\0';
+        }
+        source.chars().nth(current as usize).unwrap()
+    }
+
+    peek_next(&self) -> char {
+        if current + 1 >= source.len() as u32 {
+            return '\0';
+        }
+        source.chars().nth((current + 1) as usize).unwrap()
+    }
+
+    string(&self) {
+        while peek() != '"' && !is_at_end() {
+            if peek() == '\n' {
+                line += 1;
+            }
+            advance();
+        }
+
+        if is_at_end() {
+            error(line, "Unterminated string.");
+            return;
+        }
+
+        advance();
+
+        let value = source.chars().skip(start as usize + 1).take(current as usize - start as usize - 2).collect();
+        add_token_literal(TokenTypes::STRING, Some(value));
+    }
+
+    number(&self) {
+        while is_digit(peek()) {
+            advance();
+        }
+
+        if peek() == '.' && is_digit(peek_next()) {
+            advance();
+            while is_digit(peek()) {
+                advance();
+            }
+        }
+
+        let value = source.chars().skip(start as usize).take(current as usize - start as usize).collect();
+        add_token_literal(TokenTypes::NUMBER, Some(value));
+    }
+
+    identifier(&self) {
+        while is_alpha_numeric(peek()) {
+            advance();
+        }
+
+        // check if the identifier is a reserved word
+        let text = source.chars().skip(start as usize).take(current as usize - start as usize).collect();
+        let token_type = reserved_words.get(&text).unwrap_or(&TokenTypes::IDENTIFIER);
+        add_token(*token_type);
+
+    }
+
+    is_digit(c: char) -> bool {
+        c >= '0' && c <= '9'
+    }
+
+    is_alpha(c: char) -> bool {
+        (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_'
+    }
+
+    is_alpha_numeric(c: char) -> bool {
+        is_alpha(c) || is_digit(c)
+    }
+
+    error(&self, line: u32, message: &str) {
+        println!("Error at line {}: {}", line, message);
+    }
+
+    to_string(&self) -> String {
+        tokens.iter().map(|t| t.to_string()).collect::<Vec<String>>().join("\n")
+    }
+}
